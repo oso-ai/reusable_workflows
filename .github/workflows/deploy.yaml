@@ -1,0 +1,73 @@
+name: Build docker image and deploy to Amazon ECR
+
+on:
+  workflow_call:
+    inputs:
+      detector_name:
+        required: true
+        type: string
+  push:
+    branches:
+      - prod
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Dvc pull
+        run: |
+          pip install boto3 dvc['s3']
+          dvc pull
+          if dvc repro --dry | grep 'Running stage'
+          then
+              echo "dvc is not up to date !"
+              exit 1
+          fi
+      - name: Get current date
+        uses: 1466587594/get-current-time@v2
+        id: current-time
+        with:
+          format: DD-MM-YYYY
+
+      - name: Compute image tag
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=image_tag::${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)"
+      - name: Build, tag, and push image to Amazon ECR
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ${{ steps.login-ecr.outputs.registry }}
+          image_name: lambda-${{ inputs.detector_name }}
+          image_tag: ${{ steps.vars.outputs.image_tag }}
+
+      - name: Send message to Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: ${{ steps.vars.outputs.branch_name }}
+          fields: repo,message,author
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() # Pick up events even if the job fails or is canceled.

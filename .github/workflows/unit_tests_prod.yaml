@@ -1,5 +1,6 @@
 name: unit_tests_prod
-on: [pull_request]
+on:
+  workflow_call
 jobs:
   unit_tests_prod:
     name: unit tests for production

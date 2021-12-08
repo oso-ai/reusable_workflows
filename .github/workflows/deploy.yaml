@@ -13,6 +13,8 @@ on:
         required: true
       SLACK_WEBHOOK_URL:
         required: true
+      OSO-UTILS-ACCESS-TOKEN:
+        required: false
       
 jobs:
   deploy:
@@ -59,12 +61,22 @@ jobs:
         shell: bash
         run: |
           echo "::set-output name=image_tag::${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)"
+
+      - name: Determine path for github requirements
+        uses: haya14busa/action-cond@v1
+        id: github_path
+        with:
+          cond: ${{ secrets.OSO-UTILS-ACCESS-TOKEN }} != null
+          if_true: '{"--build-arg": "token=${{ secrets.OSO-UTILS-ACCESS-TOKEN }}"}'
+          if_false: '{}'
+
       - name: Build, tag, and push image to Amazon ECR
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: lambda-${{ inputs.detector_name }}
           image_tag: ${{ steps.vars.outputs.image_tag }}
+          build_extra_args: ${{ steps.github_path.outputs.value }}
 
       - name: Send message to Slack
         uses: 8398a7/action-slack@v3

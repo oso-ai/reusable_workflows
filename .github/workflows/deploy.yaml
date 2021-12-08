@@ -68,7 +68,7 @@ jobs:
           OSO_UTILS_ACCESS_TOKEN: ${{ secrets.OSO_UTILS_ACCESS_TOKEN }}
         id: github_path
         with:
-          cond: env.OSO_UTILS_ACCESS_TOKEN != null
+          cond: ${{ env.OSO_UTILS_ACCESS_TOKEN != null }}
           if_true: '{"--build-arg": "token=${{ secrets.OSO_UTILS_ACCESS_TOKEN }}"}'
           if_false: '{}'
 

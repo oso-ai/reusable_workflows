@@ -1,6 +1,10 @@
 name: unit_tests_prod
 on:
-  workflow_call
+  workflow_call:
+    secrets:
+        OSO-UTILS-ACCESS-TOKEN:
+          required: false
+
 jobs:
   unit_tests_prod:
     name: unit tests for production
@@ -17,12 +21,21 @@ jobs:
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
-
-      - name: fetch / install requirements # run the run.py to get the latest data
+        
+      - name: fetch
         run: |
           git fetch --prune
           git config pull.rebase true
           git pull origin ${{ steps.extract_branch.outputs.branch }}
+
+      - name: add token for oso_utils if secret is present
+        env:
+          OSO-UTILS-ACCESS-TOKEN: ${{ secrets.OSO-UTILS-ACCESS-TOKEN }}
+        if: env.OSO-UTILS-ACCESS-TOKEN != null
+        run: git config --global url."https://${{ secrets.OSO-UTILS-ACCESS-TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+
+      - name: install requirements
+        run: |
           pip install -r requirements_prod.txt
           pip install pytest
 

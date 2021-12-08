@@ -13,7 +13,7 @@ on:
         required: true
       SLACK_WEBHOOK_URL:
         required: true
-      OSO-UTILS-ACCESS-TOKEN:
+      OSO_UTILS_ACCESS_TOKEN:
         required: false
       
 jobs:
@@ -66,8 +66,8 @@ jobs:
         uses: haya14busa/action-cond@v1
         id: github_path
         with:
-          cond: ${{ secrets.OSO-UTILS-ACCESS-TOKEN }} != null
-          if_true: '{"--build-arg": "token=${{ secrets.OSO-UTILS-ACCESS-TOKEN }}"}'
+          cond: ${{ secrets.OSO_UTILS_ACCESS_TOKEN }} != null
+          if_true: '{"--build-arg": "token=${{ secrets.OSO_UTILS_ACCESS_TOKEN }}"}'
           if_false: '{}'
 
       - name: Build, tag, and push image to Amazon ECR

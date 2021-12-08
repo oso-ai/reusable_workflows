@@ -2,7 +2,7 @@ name: unit_tests_prod
 on:
   workflow_call:
     secrets:
-        OSO-UTILS-ACCESS-TOKEN:
+        OSO_UTILS_ACCESS_TOKEN:
           required: false
 
 jobs:
@@ -31,8 +31,8 @@ jobs:
       - name: add token for oso_utils if secret is present
         env:
           OSO-UTILS-ACCESS-TOKEN: ${{ secrets.OSO-UTILS-ACCESS-TOKEN }}
-        if: env.OSO-UTILS-ACCESS-TOKEN != null
-        run: git config --global url."https://${{ secrets.OSO-UTILS-ACCESS-TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+        if: env.OSO_UTILS_ACCESS_TOKEN != null
+        run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
 
       - name: install requirements
         run: |

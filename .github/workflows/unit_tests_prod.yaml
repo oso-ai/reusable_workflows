@@ -52,7 +52,7 @@ jobs:
 
       - name: Dvc pull
         run: |
-          pip install boto3 dvc['s3']
+          pip install dvc['s3']
           dvc pull
           if dvc repro --dry | grep 'Running stage'
           then

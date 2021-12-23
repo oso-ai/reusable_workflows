@@ -41,8 +41,9 @@ jobs:
         run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
 
       - name: install requirements
-        run: |
-          pip install -r requirements_prod.txt
+        run: | # install prod requirements, check if okay, install pytest
+          bash install_requirements.txt prod
+          python core/req_checker.py
           pip install pytest
           
       - name: Configure AWS credentials

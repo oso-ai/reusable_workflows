@@ -42,8 +42,7 @@ jobs:
 
       - name: install requirements
         run: | # install prod requirements, check if okay, install pytest
-          ls
-          bash install_requirements.txt prod
+          bash install_requirements.sh prod
           python core/req_checker.py
           pip install pytest
           

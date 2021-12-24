@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install libsndfile-devel
-        run: sudo apt-get install -y libsndfile-devel
+        run: sudo apt-get update -y && sudo apt-get install -y libsndfile-devel
       - name: checks
         uses: actions/checkout@v2 # checkout the repository content to github runner.
       - name: setup python

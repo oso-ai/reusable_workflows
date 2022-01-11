@@ -1,0 +1,90 @@
+name: report_metrics
+on:
+  workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID_CML:
+        required: true
+      AWS_SECRET_ACCESS_KEY_CML:
+        required: true
+
+jobs:
+  run:
+    runs-on: [ubuntu-latest]
+    container: docker://dvcorg/cml-py3:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_CML }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_CML }}
+          aws-region: eu-west-3
+
+      - name: cml_run
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --prune
+          # Pull only metrics files or plots, as we are not interested by trained model and training data
+          dvc pull metrics/metrics.json
+          dvc pull plots/
+          dvc pull data/test_targets.csv
+          dvc pull data/training_targets.csv
+
+          # Create a report file
+          touch report.md
+
+          # Add metrics diff table to the report
+          echo "## Métriques" >> report.md
+          dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all > /tmp/metrics_diff_result.md
+          head -n 2 /tmp/metrics_diff_result.md >> report.md
+          grep "Pcc" /tmp/metrics_diff_result.md >> report.md
+          # Add confusion matrices to the report
+          echo "## Matrices de confusion" >> report.md
+          for file in plots/confusion_*.csv
+          do
+            echo $file
+            file_basename=$(basename -- $file)
+            filename=${file_basename%.*}
+            echo "### $filename" | sed 's/confusion_//' >> report.md
+            vega_path="/tmp/${filename}.json"
+            echo $vega_path
+            if dvc plots diff --targets $file --template confusion -x truth -y predicted --show-vega main > $vega_path; then
+                echo "The difference between confusion matrix of current branch and main branch has been created successfully"
+            else
+                echo "The corresponding confusion matrix seems to be unavailable on branch main, only the confusion matrix of the current branch will be displayed"
+                dvc plots show $file --template confusion -x truth -y predicted --show-vega > $vega_path
+            fi
+            vl2png $vega_path -s 1.0 | cml-publish --md >> report.md
+          done
+
+          # # Publish Roc 
+          for file in plots/ROC_*.json
+          do
+            echo $file
+            file_basename=$(basename -- $file)
+            filename=${file_basename%.*}
+            vega_path="/tmp/${filename}.json"
+            echo $vega_path
+            echo "### $filename" | sed 's/ROC_//' >> report.md        
+            if dvc plots diff --targets $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega main > $vega_path; then
+              echo "The difference between ROC curve of current branch and main branch has been created successfully"
+            else
+              echo "The corresponding ROC curve seems to be unavailable on branch main, only the ROC curve of the current branch will be displayed"
+              dvc plots show $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega > $vega_path
+              echo "Done"
+            fi
+            vl2png $vega_path -s 1.0 | cml-publish --md >> report.md
+          done
+
+          # Add informations about data in report
+          n_test=$(tail data/test_targets.csv -n +2 | wc -l)
+          n_training=$(tail data/training_targets.csv -n +2 | wc -l)
+          echo "## Données\n" >> report.md
+          echo "Sur cette branche :\n" >> report.md
+          echo "**Training** : $n_training\n" >> report.md
+          echo "**Test** : $n_test\n" >> report.md
+          # Publish report
+          cml-send-comment report.md

@@ -42,7 +42,16 @@ jobs:
 
       - name: install requirements
         run: | # install prod requirements, install pytest
-          bash install_requirements.sh prod
+          if [ -f install_requirements.sh ]; then
+            echo "new requirements system"
+            bash install_requirements.sh prod
+          elif [ -f requirements_prod.txt ]; then
+            echo "Standard requirements system"
+            pip install -r requirements_prod.txt
+          else
+            echo "Neither requirements_prod.txt, neither install_requirements.sh, exiting"
+            exit 1
+          fi
           pip install pytest
           
       - name: Configure AWS credentials

@@ -49,7 +49,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-venv-
       - run: | # Build a virtualenv, but only if it doesn't already exist, install prod requirements, install pytest
-          python -m venv ./.venv && . ./.venv/bin/activate && 
+          python -m venv ./.venv && source ./.venv/bin/activate
           if [ -f install_requirements.sh ]; then
             echo "new requirements system"
             bash install_requirements.sh prod
@@ -65,7 +65,7 @@ jobs:
       # Run tests
       # Note that you have to activate the virtualenv in every step
       # because GitHub actions doesn't preserve the environment
-      - run: . ./.venv/bin/activate
+      - run: source ./.venv/bin/activate
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1

@@ -87,6 +87,5 @@ jobs:
       - name: unit test
         run: |
           source ./.venv/bin/activate
-          pip freeze
           echo "pytest"
           pytest -v unit_tests/test_prod.py

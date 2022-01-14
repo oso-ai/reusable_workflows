@@ -88,5 +88,6 @@ jobs:
 
       - name: unit test
         run: |
+          pip freeze
           echo "pytest"
           pytest -v unit_tests/test_prod.py

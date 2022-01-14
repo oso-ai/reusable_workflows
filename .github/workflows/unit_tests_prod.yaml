@@ -40,11 +40,18 @@ jobs:
         if: env.OSO_UTILS_ACCESS_TOKEN != null
         run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
 
-      - name: install requirements
-        id: cached-requirements
-        uses: actions/cache@v2
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
         with:
           path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install
         if: steps.cache.outputs.cache-hit != 'true'
         run: | # install prod requirements, install pytest
           if [ -f install_requirements.sh ]; then

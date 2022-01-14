@@ -41,7 +41,7 @@ jobs:
         run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
 
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         id: setup-python
         uses: actions/setup-python@v2
         with:

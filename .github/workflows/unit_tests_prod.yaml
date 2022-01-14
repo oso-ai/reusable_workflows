@@ -41,6 +41,11 @@ jobs:
         run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
 
       - name: install requirements
+        id: cached-requirements
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+        if: steps.cache.outputs.cache-hit != 'true'
         run: | # install prod requirements, install pytest
           if [ -f install_requirements.sh ]; then
             echo "new requirements system"

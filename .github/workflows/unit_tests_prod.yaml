@@ -68,6 +68,7 @@ jobs:
             exit 1
           fi
           pip install pytest
+          pip install .
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1

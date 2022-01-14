@@ -65,7 +65,7 @@ jobs:
       # Run tests
       # Note that you have to activate the virtualenv in every step
       # because GitHub actions doesn't preserve the environment
-      - run: . ./.venv/bin/activate && nosetests tests/
+      - run: . ./.venv/bin/activate
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1

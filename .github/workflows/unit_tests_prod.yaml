@@ -1,6 +1,12 @@
 name: unit_tests_prod
 on:
   workflow_call:
+    inputs:
+      dvc_pull:
+        description: "Run dvc pull if true, else ignore this step"
+        required: false
+        type: string
+        default: 'true'
     secrets:
         AWS_ACCESS_KEY_ID:
           required: true
@@ -75,6 +81,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Dvc pull
+        if: ${{ inputs.dvc_pull == 'true' }}
         run: |
           pip install dvc['s3']
           dvc pull

@@ -28,6 +28,12 @@ jobs:
       - name: Print commit sha
         run: echo ${{ inputs.commit_sha }}
 
+      - name: Delete local tag        
+        run : git tag -d  ${{ inputs.tag_name }} || true
+
+      - name: Delete remote tag
+        run : git push --delete origin  ${{ inputs.tag_name }} || true                 
+
       - name: Tag commit
         run : |
           git tag  ${{ inputs.tag_name }} ${{ inputs.commit_sha }}

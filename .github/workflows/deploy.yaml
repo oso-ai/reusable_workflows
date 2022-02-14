@@ -3,15 +3,19 @@ name: Build docker image and deploy to Amazon ECR
 on:
   workflow_call:
     inputs:
-      detector_name:
-        required: true
+      dvc_pull:
+        description: "Run dvc pull if true, else ignore this step"
+        required: false
         type: string
+        default: 'true'
+      detector_name:
+        required: false
+        type: string
+        default: 'datapicking'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
-        required: true
-      SLACK_WEBHOOK_URL:
         required: true
       OSO_UTILS_ACCESS_TOKEN:
         required: false
@@ -42,6 +46,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Dvc pull
+        if: ${{ inputs.dvc_pull == 'true' }}
         run: |
           pip install dvc['s3']
           dvc pull

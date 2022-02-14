@@ -55,11 +55,15 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Dvc install pull repro
+      - name: Dvc install
         if: ${{ inputs.dvc_install == 'true' }}
         run: pip install dvc['s3']
+
+      - name: Dvc pull
         if: ${{ inputs.dvc_pull == 'true' }}
         run: dvc pull
+        
+      - name: Dvc repro
         if: ${{ inputs.dvc_repro == 'true' }}
         run: |
           if dvc repro --dry | grep 'Running stage'

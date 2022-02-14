@@ -3,18 +3,8 @@ name: Build docker image and deploy to Amazon ECR
 on:
   workflow_call:
     inputs:
-      dvc_install:
-        description: "Run pip install dvc['s3'] if true, else ignore this step"
-        required: false
-        type: string
-        default: 'true'
       dvc_pull:
-        description: "Run dvc pull if true, else ignore this step"
-        required: false
-        type: string
-        default: 'true'
-      dvc_repro:
-        description: "Run dvc repro if true, else ignore this step"
+        description: "Run dvc install, pull and repro if true, else ignore this step"
         required: false
         type: string
         default: 'true'
@@ -54,18 +44,12 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Dvc install
-        if: ${{ inputs.dvc_install == 'true' }}
-        run: pip install dvc['s3']
-
-      - name: Dvc pull
-        if: ${{ inputs.dvc_pull == 'true' }}
-        run: dvc pull
         
-      - name: Dvc repro
+      - name: Dvc install pull repro
         if: ${{ inputs.dvc_repro == 'true' }}
         run: |
+          pip install dvc['s3']
+          dvc pull
           if dvc repro --dry | grep 'Running stage'
           then
               echo "dvc is not up to date !"

@@ -42,7 +42,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install boto3==1.16.35 PyYAML==5.4.1
 
       - name: Update lambda versions
         env:

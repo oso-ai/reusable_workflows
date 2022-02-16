@@ -20,12 +20,20 @@ on:
         required: true
       OSO_UTILS_ACCESS_TOKEN:
         required: false
+    outputs:
+      repo_name:
+        value: ${{ jobs.deploy.outputs.repo_name }}
+      docker_tag:
+        value: ${{ jobs.deploy.outputs.docker_tag }}
+
       
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-
+    outputs:
+      repo_name: ${{ steps.vars2.outputs.image_name }}
+      docker_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -69,6 +77,12 @@ jobs:
         run: |
           echo "::set-output name=image_tag::${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)"
 
+      - name: Compute image name
+        id: vars2
+        shell: bash
+        run: |
+          echo "::set-output name=image_name::lambda-${{ inputs.detector_name }}"
+
       - name: Determine path for github requirements
         uses: haya14busa/action-cond@v1
         env:
@@ -83,7 +97,7 @@ jobs:
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: lambda-${{ inputs.detector_name }}
+          image_name: ${{ steps.vars2.outputs.image_name }}
           image_tag: ${{ steps.vars.outputs.image_tag }}
           build_extra_args: ${{ steps.github_path.outputs.value }}
 

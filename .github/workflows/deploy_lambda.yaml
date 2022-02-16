@@ -1,0 +1,91 @@
+name: Build docker image and deploy to Amazon ECR
+
+on:
+  workflow_call:
+    inputs:
+      repo_name:
+        required: true
+        type: string
+      docker_tag:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      OSO_UTILS_ACCESS_TOKEN:
+        required: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+
+      - name: Install python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.8"
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install boto3==1.16.35 PyYAML==5.4.1
+
+      - name: Update lambda versions
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: python getLambdaImagesUri.py ${{ inputs.repo_name }} ${{ inputs.docker_tag }}
+
+      - name: Install node
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+
+      - name: Cache node
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install Serverless Framework
+        run: npm install -g serverless@2.35.0
+
+      - name: Serverless AWS authentication
+        run: sls config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Prints the current branch name
+        id: vars
+        run: echo "::set-output name=branch_name::${GITHUB_BRANCH##*/}"
+        env:
+          GITHUB_BRANCH: ${{ github.ref }}
+
+      - name: Deploy serverless configuration
+        run: ./deploy.sh ${{ steps.vars.outputs.branch_name }}
+        shell: bash
+
+      - name: Send message to Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: ${{ steps.vars.outputs.branch_name }}
+          fields: repo,message,author,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() # Pick up events even if the job fails or is canceled.
+
+

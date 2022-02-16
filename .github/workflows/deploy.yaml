@@ -21,15 +21,17 @@ on:
       OSO_UTILS_ACCESS_TOKEN:
         required: false
     outputs:
-      repo_name: ${{ steps.vars2.outputs.image_name }}
-      docker_tag: ${{ steps.vars.outputs.image_tag }}
+      repo_name: ${{ jobs.deploy.outputs.repo_name }}
+      docker_tag: ${{ jobs.deploy.outputs.docker_tag }}
 
       
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-
+    outputs:
+      repo_name: ${{ steps.vars2.outputs.image_name }}
+      docker_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2

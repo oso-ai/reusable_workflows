@@ -21,8 +21,10 @@ on:
       OSO_UTILS_ACCESS_TOKEN:
         required: false
     outputs:
-      repo_name: ${{ jobs.deploy.outputs.repo_name }}
-      docker_tag: ${{ jobs.deploy.outputs.docker_tag }}
+      repo_name:
+        value: ${{ jobs.deploy.outputs.repo_name }}
+      docker_tag:
+        value: ${{ jobs.deploy.outputs.docker_tag }}
 
       
 jobs:

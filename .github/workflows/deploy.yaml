@@ -20,6 +20,10 @@ on:
         required: true
       OSO_UTILS_ACCESS_TOKEN:
         required: false
+    outputs:
+      repo_name: lambda-${{ inputs.detector_name }}
+      docker_tag: ${{ steps.vars.outputs.image_tag }}
+
       
 jobs:
   deploy:

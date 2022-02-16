@@ -18,19 +18,11 @@ on:
         required: true
       OSO_UTILS_ACCESS_TOKEN:
         required: false
-        
+
 jobs:
   deploy:
-
-    name: deploy
+    name: Deploy
     runs-on: ubuntu-latest
-    inputs:
-      repo_name:
-        required: true
-      docker_tag:
-        required: true
-    outputs:
-      branch_name: ${{ steps.vars.outputs.branch_name }}
 
     steps:
       - name: Clone repository

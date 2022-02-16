@@ -9,13 +9,14 @@ on:
         type: string
         default: 'true'
       detector_name:
-        required: false
+        required: true
         type: string
-        default: 'datapicking'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_WEBHOOK_URL:
         required: true
       OSO_UTILS_ACCESS_TOKEN:
         required: false
@@ -85,3 +86,13 @@ jobs:
           image_name: lambda-${{ inputs.detector_name }}
           image_tag: ${{ steps.vars.outputs.image_tag }}
           build_extra_args: ${{ steps.github_path.outputs.value }}
+
+      - name: Send message to Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: ${{ steps.vars.outputs.branch_name }}
+          fields: repo,message,author
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() # Pick up events even if the job fails or is canceled.

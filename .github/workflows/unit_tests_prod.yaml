@@ -46,7 +46,7 @@ jobs:
         if: env.OSO_UTILS_ACCESS_TOKEN != null
         run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
 
-      - uses: install requirements
+      - name: install requirements
         id: install-requirements
       - run: |
           python -m venv ./.venv && source ./.venv/bin/activate

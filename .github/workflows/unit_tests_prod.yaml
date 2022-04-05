@@ -48,7 +48,7 @@ jobs:
 
       - name: install requirements
         id: install-requirements
-      - run: |
+        run: |
           python -m venv ./.venv && source ./.venv/bin/activate
           if [ -f install_requirements.sh ]; then
             echo "new requirements system"

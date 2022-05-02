@@ -10,7 +10,7 @@ on:
 jobs:
   run:
     runs-on: [ubuntu-latest]
-    container: docker://dvcorg/cml-py3:latest
+    container: docker://dvcorg/cml:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -28,6 +28,7 @@ jobs:
         run: |
           git fetch --prune
           # Pull only metrics files or plots, as we are not interested by trained model and training data
+          pip install dvc s3fs boto3
           dvc pull metrics/metrics.json
           dvc pull plots/
           dvc pull data/test_targets.csv
@@ -57,7 +58,8 @@ jobs:
                 echo "The corresponding confusion matrix seems to be unavailable on branch main, only the confusion matrix of the current branch will be displayed"
                 dvc plots show $file --template confusion -x truth -y predicted --show-vega > $vega_path
             fi
-            vl2png $vega_path -s 1.0 | cml-publish --md >> report.md
+            vl2png $vega_path -s 1.0 > plot.png
+            cml-publish --md plot.png >> report.md
           done
 
           # # Publish Roc 
@@ -76,7 +78,8 @@ jobs:
               dvc plots show $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega > $vega_path
               echo "Done"
             fi
-            vl2png $vega_path -s 1.0 | cml-publish --md >> report.md
+            vl2png $vega_path -s 1.0 > plot.png
+            cml-publish --md plot.png >> report.md
           done
 
           # Add informations about data in report
@@ -86,5 +89,10 @@ jobs:
           echo "Sur cette branche :\n" >> report.md
           echo "**Training** : $n_training\n" >> report.md
           echo "**Test** : $n_test\n" >> report.md
+
+          # Add DVC DAG
+          echo >> report.md
+          dvc dag --md >> report.md
+
           # Publish report
           cml-send-comment report.md

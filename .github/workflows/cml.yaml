@@ -6,6 +6,10 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY_CML:
         required: true
+    inputs:
+      detector_name:
+        required: true
+        type: string
 
 jobs:
   run:
@@ -26,7 +30,7 @@ jobs:
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global --add safe.directory /__w/layer1/layer1
+          git config --global --add safe.directory /__w/${{ inputs.detector_name }}/${{ inputs.detector_name }}
           git fetch --prune
           # Pull only metrics files or plots, as we are not interested by trained model and training data
           pip install dvc s3fs boto3

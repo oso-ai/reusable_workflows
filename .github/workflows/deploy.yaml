@@ -107,7 +107,7 @@ jobs:
         with:
           status: ${{ job.status }}
           author_name: ${{ steps.vars.outputs.branch_name }}
-          fields: repo,message,author
+          fields: repo,message,author,took,commit
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always() # Pick up events even if the job fails or is canceled.

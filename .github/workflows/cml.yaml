@@ -80,7 +80,7 @@ jobs:
         if: ${{ inputs.plots != 'empty' }}
         run: |
 
-        dvc pull ${{ inputs.plots }}
+          dvc pull ${{ inputs.plots }}
 
           # Add confusion matrices to the report
           echo "## Matrices de confusion" >> report.md

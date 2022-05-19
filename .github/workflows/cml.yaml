@@ -120,7 +120,6 @@ jobs:
             vl2png $vega_path -s 1.0 > plot.png
             cml-publish --md plot.png >> report.md
           done
-        fi
 
 
       - name: cml_run_test_targets
@@ -128,13 +127,11 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.test_targets != 'empty' }}
         run: |
-        # Add informations about data in report
-        echo "## Données\n" >> report.md
-        if test -f data/test_targets; then
+          # Add informations about data in report
+          echo "## Données\n" >> report.md
           echo "Sur cette branche :\n" >> report.md
           n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
           echo "**Test** : $n_test\n" >> report.md
-        fi
 
 
       - name: cml_run_training_targets
@@ -142,10 +139,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.training_targets != 'empty' }}
         run: |
-        if test -f data/training_targets; then
           n_training=$(tail ${{ inputs.training_targets }} -n +2 | wc -l)
           echo "**Training** : $n_training\n" >> report.md
-        fi
 
       - name: cml_run_validation_targets
         env:

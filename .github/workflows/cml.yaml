@@ -8,8 +8,32 @@ on:
         required: true
     inputs:
       detector_name:
-        required: true
+        required: false
         type: string
+      training_targets:
+        required: false
+        type: string
+        default: data/training_targets.csv
+      test_targets:
+        required: false
+        type: string
+        default: data/test_targets.csv
+      validation_targets:
+        required: false
+        type: string
+        default: empty
+      metrics:
+        required: false
+        type: string
+        default: metrics/metrics.json
+      plots:
+        required: false
+        type: string
+        default: plots
+      cost:
+        required: False
+        type: string
+        default: empty
 
 jobs:
   run:
@@ -26,30 +50,39 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_CML }}
           aws-region: eu-west-3
 
-      - name: cml_run
+      - name: dvc_pull
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global --add safe.directory /__w/${{ inputs.detector_name }}/${{ inputs.detector_name }}
           git fetch --prune
+
+          # install dvc[s3]
+          pip install dvc s3fs boto3 --use-deprecated=legacy-resolver
+
           # Pull only metrics files or plots, as we are not interested by trained model and training data
-          pip install dvc s3fs boto3
-          dvc pull metrics/metrics.json
-          dvc pull plots/
-          dvc pull data/test_targets.csv
-          dvc pull data/training_targets.csv
-
-          # Create a report file
-          touch report.md
-
+          # ignore if not exist
+      - name: cml_run_metrics
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.metrics != 'empty' }}
+        run: |
+          dvc pull ${{ inputs.metrics }}
           # Add metrics diff table to the report
           echo "## Métriques" >> report.md
-          dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all > /tmp/metrics_diff_result.md
+          dvc metrics diff main --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           head -n 2 /tmp/metrics_diff_result.md >> report.md
           grep "Pcc" /tmp/metrics_diff_result.md >> report.md
+
+      - name: cml_run_plots
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.plots != 'empty' }}
+        run: |
+
           # Add confusion matrices to the report
           echo "## Matrices de confusion" >> report.md
-          for file in plots/confusion_*.csv
+          for file in ${{ inputs.plots }}/confusion_*.csv
           do
             echo $file
             file_basename=$(basename -- $file)
@@ -67,8 +100,9 @@ jobs:
             cml-publish --md plot.png >> report.md
           done
 
+
           # # Publish Roc 
-          for file in plots/ROC_*.json
+          for file in ${{ inputs.plots }}/ROC_*.json
           do
             echo $file
             file_basename=$(basename -- $file)
@@ -86,18 +120,59 @@ jobs:
             vl2png $vega_path -s 1.0 > plot.png
             cml-publish --md plot.png >> report.md
           done
+        fi
 
-          # Add informations about data in report
-          n_test=$(tail data/test_targets.csv -n +2 | wc -l)
-          n_training=$(tail data/training_targets.csv -n +2 | wc -l)
-          echo "## Données\n" >> report.md
+
+      - name: cml_run_test_targets
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.test_targets != 'empty' }}
+        run: |
+        # Add informations about data in report
+        echo "## Données\n" >> report.md
+        if test -f data/test_targets; then
           echo "Sur cette branche :\n" >> report.md
-          echo "**Training** : $n_training\n" >> report.md
+          n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
           echo "**Test** : $n_test\n" >> report.md
+        fi
 
+
+      - name: cml_run_training_targets
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.training_targets != 'empty' }}
+        run: |
+        if test -f data/training_targets; then
+          n_training=$(tail ${{ inputs.training_targets }} -n +2 | wc -l)
+          echo "**Training** : $n_training\n" >> report.md
+        fi
+
+      - name: cml_run_validation_targets
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.validation_targets != 'empty' }}
+        run: |
+          n_validation=$(tail ${{ inputs.validation_targets }} -n +2 | wc -l)
+          echo "**Validation** : $n_validation\n" >> report.md
+
+
+      - name: cml_run_cost
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.cost != 'empty' }}
+        run: |
+          # Add stats on prod cost
+          echo >> report.md
+          dvc metrics diff main --targets ${{ inputs.cost }} --show-md --no-path --all > /tmp/metrics_diff_result.md
+          cat /tmp/metrics_diff_result.md >> report.md
+
+
+      - name: cml_run_dag_and_export
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           # Add DVC DAG
           echo >> report.md
           dvc dag --md >> report.md
-
           # Publish report
           cml-send-comment report.md

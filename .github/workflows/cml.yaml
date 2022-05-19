@@ -80,6 +80,8 @@ jobs:
         if: ${{ inputs.plots != 'empty' }}
         run: |
 
+        dvc pull ${{ inputs.plots }}
+
           # Add confusion matrices to the report
           echo "## Matrices de confusion" >> report.md
           for file in ${{ inputs.plots }}/confusion_*.csv
@@ -127,6 +129,9 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.test_targets != 'empty' }}
         run: |
+
+          dvc pull ${{ inputs.test_targets }}
+
           # Add informations about data in report
           echo "## Données\n" >> report.md
           echo "Sur cette branche :\n" >> report.md
@@ -139,6 +144,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.training_targets != 'empty' }}
         run: |
+          dvc pull ${{ inputs.training_targets }}
           n_training=$(tail ${{ inputs.training_targets }} -n +2 | wc -l)
           echo "**Training** : $n_training\n" >> report.md
 
@@ -147,6 +153,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.validation_targets != 'empty' }}
         run: |
+          dvc pull ${{ inputs.validation_targets }}
           n_validation=$(tail ${{ inputs.validation_targets }} -n +2 | wc -l)
           echo "**Validation** : $n_validation\n" >> report.md
 
@@ -156,6 +163,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.cost != 'empty' }}
         run: |
+          dvc pull ${{ inputs.cost }}
           # Add stats on prod cost
           echo >> report.md
           dvc metrics diff main --targets ${{ inputs.cost }} --show-md --no-path --all > /tmp/metrics_diff_result.md

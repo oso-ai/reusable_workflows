@@ -124,21 +124,6 @@ jobs:
           done
 
 
-      - name: cml_run_test_targets
-        env:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ inputs.test_targets != 'empty' }}
-        run: |
-
-          dvc pull ${{ inputs.test_targets }}
-
-          # Add informations about data in report
-          echo "## Données\n" >> report.md
-          echo "Sur cette branche :\n" >> report.md
-          n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
-          echo "**Test** : $n_test\n" >> report.md
-
-
       - name: cml_run_training_targets
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -156,6 +141,21 @@ jobs:
           dvc pull ${{ inputs.validation_targets }}
           n_validation=$(tail ${{ inputs.validation_targets }} -n +2 | wc -l)
           echo "**Validation** : $n_validation\n" >> report.md
+
+      - name: cml_run_test_targets
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.test_targets != 'empty' }}
+        run: |
+
+          dvc pull ${{ inputs.test_targets }}
+
+          # Add informations about data in report
+          echo "## Données\n" >> report.md
+          echo "Sur cette branche :\n" >> report.md
+          n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
+          echo "**Test** : $n_test\n" >> report.md
+
 
 
       - name: cml_run_cost

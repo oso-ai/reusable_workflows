@@ -58,7 +58,7 @@ jobs:
           git fetch --prune
 
           # install dvc[s3]
-          pip install dvc==2.13.0 s3fs==2022.5.0 boto3==1.24.49 --use-deprecated=legacy-resolver
+          pip install dvc[s3] --use-deprecated=legacy-resolver
 
           # Pull only metrics files or plots, as we are not interested by trained model and training data
           # ignore if not exist

@@ -44,7 +44,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "An error occurred while running update_labelsdb_datasets on ${{ github.repository }}\nLogs : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "An error occurred on GitHub while running *update_labelsdb_datasets*\n*Repo* : ${{ github.repository }}\n*Logs* : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.LABELSDB_MONITORING_SLACK_WEBHOOK_URL }}

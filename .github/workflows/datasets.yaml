@@ -1,0 +1,51 @@
+name: Update datasets table on LabelsDB
+on:
+  workflow_call:
+    secrets:
+      OSO_UTILS_ACCESS_TOKEN:
+        required: true
+      LABELSDB_MONITORING_SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  update_labelsdb_datasets:
+    name: update datasets table on LabelsDB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Add token for oso_utils
+        env:
+          OSO_UTILS_ACCESS_TOKEN: ${{ secrets.OSO_UTILS_ACCESS_TOKEN }}
+        run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+
+      - name: install requirements
+        id: install-requirements
+        run: |
+          python -m venv ./.venv && source ./.venv/bin/activate
+          pip install git+ssh://git@github.com/oso-ai/oso-utils.git@pushDatasetToLabelsDB#subdirectory=dataUtils
+
+      - name: Update datasets table in LabelsDB
+        run: |
+          source ./.venv/bin/activate
+          echo "Updating datasets table in LabelsDB"
+          pushDatasetsToLabelsDB .
+
+      - name: Send message to slack if failure
+        id: slack
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v1.22.0
+        with:
+          payload: |
+            {
+              "text": "An error occurred while running update_labelsdb_datasets on ${{ github.repository }}\nLogs : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.LABELSDB_MONITORING_SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

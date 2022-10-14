@@ -75,6 +75,8 @@ jobs:
           if [ -e is_better.py ]
           then
             pip install scipy
+            dvc pull ${{ inputs.test_targets }}
+            dvc pull ${{ inputs.metrics }}
             old=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 41)
             new=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 44)
             n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)

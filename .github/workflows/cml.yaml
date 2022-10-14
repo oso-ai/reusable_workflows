@@ -62,14 +62,32 @@ jobs:
 
           # Pull only metrics files or plots, as we are not interested by trained model and training data
           # ignore if not exist
+
+      - name: compute_pcc_diff
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+
+
+          # Add metrics diff table to the report
+          echo "## Métriques" >> report.md
+
+          if [ -e compute_pcc_diff.py ]
+          then
+            old=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 41)
+            new=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 44)
+            n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
+            python compute_pcc_diff.py $old $new $n_test
+            echo "### Normalized PCC diff (on average pcc)"
+            cat /tmp/diff_pccs.txt >> report.md
+          fi
+
       - name: cml_run_metrics
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.metrics != 'empty' }}
         run: |
           dvc pull ${{ inputs.metrics }}
-          # Add metrics diff table to the report
-          echo "## Métriques" >> report.md
           dvc metrics diff main --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           head -n 2 /tmp/metrics_diff_result.md >> report.md
           grep "Pcc" /tmp/metrics_diff_result.md >> report.md

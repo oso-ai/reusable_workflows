@@ -81,7 +81,7 @@ jobs:
             new=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 44)
             n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
             python3 is_better.py $old $new $n_test
-            echo "Probability to get an equal or larger PCC difference if scores follows a normal law (random performance):"
+            echo "Probability to get an equal or larger PCC difference if scores follows a normal law (random performance):" >> report.md
             cat /tmp/proba.txt >> report.md
           fi
 

@@ -74,10 +74,11 @@ jobs:
 
           if [ -e is_better.py ]
           then
+            pip install scipy
             old=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 41)
             new=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" | cut -d ' ' -f 44)
             n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
-            python is_better.py $old $new $n_test
+            python3 is_better.py $old $new $n_test
             echo "Probability to get an equal or larger PCC difference if scores follows a normal law (random performance):"
             cat /tmp/diff_pccs.txt >> report.md
           fi

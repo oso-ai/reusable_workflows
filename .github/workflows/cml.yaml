@@ -82,7 +82,7 @@ jobs:
             n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
             python3 is_better.py $old $new $n_test
             echo "Probability to get an equal or larger PCC difference if scores follows a normal law (random performance):"
-            cat /tmp/diff_pccs.txt >> report.md
+            cat /tmp/proba.txt >> report.md
           fi
 
       - name: cml_run_metrics

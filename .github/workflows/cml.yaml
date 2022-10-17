@@ -125,7 +125,7 @@ jobs:
                 dvc plots show $file --template confusion -x truth -y predicted --show-vega > $vega_path
             fi
             vl2png $vega_path -s 1.0 > plot.png
-            cml-publish --md plot.png >> report.md
+            cml asset publish --md plot.png >> report.md
           done
 
 
@@ -146,7 +146,7 @@ jobs:
               echo "Done"
             fi
             vl2png $vega_path -s 1.0 > plot.png
-            cml-publish --md plot.png >> report.md
+            cml asset publish --md plot.png >> report.md
           done
 
 

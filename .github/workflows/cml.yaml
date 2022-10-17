@@ -204,4 +204,4 @@ jobs:
           echo >> report.md
           dvc dag --md >> report.md
           # Publish report
-          cml-send-comment --commit-sha $GITHUB_SHA report.md
+          cml comment create --commit-sha $GITHUB_SHA report.md

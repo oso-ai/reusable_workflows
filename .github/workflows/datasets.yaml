@@ -37,15 +37,23 @@ jobs:
           echo "Updating datasets table in LabelsDB"
           pushDatasetsToLabelsDB .
 
-      - name: Send message to slack if failure
-        id: slack
-        if: ${{ failure() }}
-        uses: slackapi/slack-github-action@v1.22.0
+      - name: Determine text for slack message
+        uses: haya14busa/action-cond@v1
+        id: slack_text
         with:
-          payload: |
-            {
-              "text": "*An error occurred on GitHub while running update_labelsdb_datasets job*\n*Repo* : ${{ github.repository }}\n*Logs* : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }
+          cond: ${{ job.status == 'success' }}
+          if_true: "Dataset update, LabelsDB updated successfully"
+          if_false: "Dataset update, an error occurred on GitHub while updating LabelsDB"
+
+      - name: Send message to Slack
+        id: slack
+        uses: 8398a7/action-slack@v3
+        with:
+          text: ${{ steps.slack_text.outputs.value }}
+          status: ${{ job.status }}
+          author_name: ${{ steps.vars.outputs.branch_name }}
+          job_name: 'update datasets table on LabelsDB'
+          fields: repo,message,author,took,commit,job
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.LABELSDB_MONITORING_SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        if: always() # Pick up events even if the job fails or is canceled.

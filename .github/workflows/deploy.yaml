@@ -67,7 +67,7 @@ jobs:
           fi
         
       - name: Get current date
-        uses: 1466587594/get-current-time@v2
+        uses: 1466587594/get-current-time@v2.0.2
         id: current-time
         with:
           format: DD-MM-YYYY

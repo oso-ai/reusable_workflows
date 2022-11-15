@@ -73,16 +73,16 @@ jobs:
           format: DD-MM-YYYY
 
       - name: Compute image tag
-        id: vars
+        id: compute_image_tag
         shell: bash
         run: |
-          echo "::set-output name=image_tag::${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)"
+          echo "image_tag=${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Compute image name
-        id: vars2
+        id: compute_image_name
         shell: bash
         run: |
-          echo "::set-output name=image_name::lambda-${{ inputs.detector_name }}"
+          echo "image_name=lambda-${{ inputs.detector_name }}" >> $GITHUB_OUTPUT
 
       - name: Determine path for github requirements
         uses: haya14busa/action-cond@v1
@@ -98,8 +98,8 @@ jobs:
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ${{ steps.vars2.outputs.image_name }}
-          image_tag: ${{ steps.vars.outputs.image_tag }}
+          image_name: ${{ steps.compute_image_name.outputs.image_name }}
+          image_tag: ${{ steps.compute_image_tag.outputs.image_tag }}
           build_extra_args: ${{ steps.github_path.outputs.value }}
 
       - name: Send message to Slack

@@ -36,10 +36,10 @@ jobs:
       docker_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.5.0
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.8
 

@@ -26,10 +26,10 @@ jobs:
 
     steps:
       - name: Clone repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.5.0
 
       - name: Install python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: "3.8"
 

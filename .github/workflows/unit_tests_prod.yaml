@@ -23,22 +23,18 @@ jobs:
       - name: Install libsndfile-dev
         run: sudo apt-get update -y && sudo apt-get install -y libsndfile-dev
       - name: checks
-        uses: actions/checkout@v2 # checkout the repository content to github runner.
+        uses: actions/checkout@v2.5.0 # checkout the repository content to github runner.
       - name: setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.8.10 #install the python needed
 
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-        
       - name: fetch
         run: |
           git fetch --prune
           git config pull.rebase true
-          git pull origin ${{ steps.extract_branch.outputs.branch }}
+          echo 
+          git pull origin $(echo ${GITHUB_REF#refs/heads/})
 
       - name: add token for oso_utils if secret is present
         env:

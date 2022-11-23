@@ -1,0 +1,117 @@
+name: Build docker image and deploy to Amazon ECR
+
+on:
+  workflow_call:
+    inputs:
+      dvc_pull:
+        description: "Run dvc install, pull and repro if true, else ignore this step"
+        required: false
+        type: string
+        default: 'true'
+      detector_name:
+        required: true
+        type: string
+      region:
+        required: false
+        type: string
+        default: eu-west-1
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      SLACK_WEBHOOK_URL:
+        required: true
+      OSO_UTILS_ACCESS_TOKEN:
+        required: false
+    outputs:
+      repo_name:
+        value: ${{ jobs.deploy.outputs.repo_name }}
+      docker_tag:
+        value: ${{ jobs.deploy.outputs.docker_tag }}
+
+      
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    outputs:
+      repo_name: ${{ steps.vars2.outputs.image_name }}
+      docker_tag: ${{ steps.vars.outputs.image_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.5.0
+
+      - name: Setup python
+        uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.8
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+        
+      - name: Dvc install pull repro
+        if: ${{ inputs.dvc_pull == 'true' }}
+        run: |
+          pip install dvc['s3']
+          dvc pull
+          if dvc repro --dry | grep 'Running stage'
+          then
+              echo "dvc is not up to date !"
+              exit 1
+          fi
+        
+      - name: Get current date
+        uses: 1466587594/get-current-time@v2.0.2
+        id: current-time
+        with:
+          format: DD-MM-YYYY
+
+      - name: Compute image tag
+        id: compute_image_tag
+        shell: bash
+        run: |
+          echo "image_tag=${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Compute image name
+        id: compute_image_name
+        shell: bash
+        run: |
+          echo "image_name=${{ inputs.detector_name }}" >> $GITHUB_OUTPUT
+
+      - name: Determine path for github requirements
+        uses: haya14busa/action-cond@v1
+        env:
+          OSO_UTILS_ACCESS_TOKEN: ${{ secrets.OSO_UTILS_ACCESS_TOKEN }}
+        id: github_path
+        with:
+          cond: ${{ env.OSO_UTILS_ACCESS_TOKEN != null }}
+          if_true: '{"--build-arg": "token=${{ secrets.OSO_UTILS_ACCESS_TOKEN }}"}'
+          if_false: '{}'
+
+      - name: Build, tag, and push image to Amazon ECR
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ${{ steps.login-ecr.outputs.registry }}
+          image_name: ${{ steps.compute_image_name.outputs.image_name }}
+          image_tag: ${{ steps.compute_image_tag.outputs.image_tag }},latest
+          build_extra_args: ${{ steps.github_path.outputs.value }}
+
+      - name: Send message to Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: ${{ steps.vars.outputs.branch_name }}
+          fields: repo,message,author,took,commit
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always() # Pick up events even if the job fails or is canceled.

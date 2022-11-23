@@ -11,6 +11,10 @@ on:
       detector_name:
         required: true
         type: string
+      region:
+        required: false
+        type: string
+        default: eu-west-1
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -48,7 +52,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: ${{ inputs.region }}
 
       - name: Login to Amazon ECR
         id: login-ecr

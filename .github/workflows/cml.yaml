@@ -72,17 +72,25 @@ jobs:
           # Add metrics diff table to the report
           echo "## Métriques" >> report.md
 
+          if [ ${GITHUB_REF#refs/heads/} = "main" ]
+          then
+            branch="build"
+          else
+            branch="main"
+          fi
+
           if [ -e is_better.py ]
           then
-            if dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all;
+            if dvc metrics diff $branch --targets metrics/metrics.json --show-md --no-path --all;
             then
               pip install scipy
               dvc pull ${{ inputs.test_targets }}
               dvc pull ${{ inputs.metrics }}
-              old=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" |  tr -d " \t\n\r" | cut -d '|' -f 3)
-              new=$(dvc metrics diff main --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" |  tr -d " \t\n\r" | cut -d '|' -f 4)
+              old=$(dvc metrics diff $branch --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" |  tr -d " \t\n\r" | cut -d '|' -f 3)
+              new=$(dvc metrics diff $branch --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" |  tr -d " \t\n\r" | cut -d '|' -f 4)
               n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
               python3 is_better.py $old $new $n_test
+              echo "Comparison branch $branch"
               echo "Probability to get an equal or larger PCC difference if scores follows a normal law (random performance):" >> report.md
               cat /tmp/proba.txt >> report.md
             fi
@@ -93,10 +101,16 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.metrics != 'empty' }}
         run: |
+          if [ ${GITHUB_REF#refs/heads/} = "main" ]
+          then
+            branch="build"
+          else
+            branch="main"
+          fi
           echo >> report.md
           echo >> report.md
           dvc pull ${{ inputs.metrics }}
-          dvc metrics diff main --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
+          dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           head -n 2 /tmp/metrics_diff_result.md >> report.md
           grep "Pcc" /tmp/metrics_diff_result.md >> report.md
 
@@ -108,6 +122,13 @@ jobs:
 
           dvc pull ${{ inputs.plots }}
 
+          if [ ${GITHUB_REF#refs/heads/} = "main" ]
+          then
+            branch="build"
+          else
+            branch="main"
+          fi
+
           # Add confusion matrices to the report
           echo "## Matrices de confusion" >> report.md
           for file in ${{ inputs.plots }}/confusion_*.csv
@@ -118,10 +139,10 @@ jobs:
             echo "### $filename" | sed 's/confusion_//' >> report.md
             vega_path="/tmp/${filename}.json"
             echo $vega_path
-            if dvc plots diff --targets $file --template confusion -x truth -y predicted --show-vega main > $vega_path; then
-                echo "The difference between confusion matrix of current branch and main branch has been created successfully"
+            if dvc plots diff --targets $file --template confusion -x truth -y predicted --show-vega $branch > $vega_path; then
+                echo "The difference between confusion matrix of current branch and $branch branch has been created successfully"
             else
-                echo "The corresponding confusion matrix seems to be unavailable on branch main, only the confusion matrix of the current branch will be displayed"
+                echo "The corresponding confusion matrix seems to be unavailable on branch $branch, only the confusion matrix of the current branch will be displayed"
                 dvc plots show $file --template confusion -x truth -y predicted --show-vega > $vega_path
             fi
             vl2png $vega_path -s 1.0 > plot.png
@@ -138,10 +159,10 @@ jobs:
             vega_path="/tmp/${filename}.json"
             echo $vega_path
             echo "### $filename" | sed 's/ROC_//' >> report.md        
-            if dvc plots diff --targets $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega main > $vega_path; then
-              echo "The difference between ROC curve of current branch and main branch has been created successfully"
+            if dvc plots diff --targets $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega $branch > $vega_path; then
+              echo "The difference between ROC curve of current branch and $branch branch has been created successfully"
             else
-              echo "The corresponding ROC curve seems to be unavailable on branch main, only the ROC curve of the current branch will be displayed"
+              echo "The corresponding ROC curve seems to be unavailable on branch $branch, only the ROC curve of the current branch will be displayed"
               dvc plots show $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega > $vega_path
               echo "Done"
             fi
@@ -189,10 +210,17 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.cost != 'empty' }}
         run: |
+          if [ ${GITHUB_REF#refs/heads/} = "main" ]
+          then
+            branch="build"
+          else
+            branch="main"
+          fi
+
           dvc pull ${{ inputs.cost }}
           # Add stats on prod cost
           echo >> report.md
-          dvc metrics diff main --targets ${{ inputs.cost }} --show-md --no-path --all > /tmp/metrics_diff_result.md
+          dvc metrics diff $branch --targets ${{ inputs.cost }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           cat /tmp/metrics_diff_result.md >> report.md
 
 

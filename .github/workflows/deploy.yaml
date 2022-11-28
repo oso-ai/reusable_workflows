@@ -103,7 +103,7 @@ jobs:
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ${{ steps.compute_image_name.outputs.image_name }}
-          image_tag: ${{ steps.compute_image_tag.outputs.image_tag }},latest
+          image_tag: ${{ steps.compute_image_tag.outputs.image_tag }}
           build_extra_args: ${{ steps.github_path.outputs.value }}
 
       - name: Send message to Slack

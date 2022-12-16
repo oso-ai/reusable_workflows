@@ -29,7 +29,7 @@ jobs:
         id: install-requirements
         run: |
           python -m venv ./.venv && source ./.venv/bin/activate
-          pip install git+ssh://git@github.com/oso-ai/oso-utils.git@main#subdirectory=dataUtils
+          pip install git+ssh://git@github.com/oso-ai/oso-utils.git@main#subdirectory=genericUtils
 
       - name: Update datasets table in LabelsDB
         run: |

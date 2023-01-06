@@ -232,4 +232,9 @@ jobs:
           echo >> report.md
           dvc dag --md >> report.md
           # Publish report
-          cml comment create --update report.md
+          if [ ${GITHUB_REF#refs/heads/} = "main" ]
+          then
+            cml comment create --target=commit/$GITHUB_SHA report.md
+          else
+            cml comment create --update report.md
+          fi

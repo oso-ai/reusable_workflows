@@ -234,7 +234,9 @@ jobs:
           # Publish report
           if [ ${GITHUB_REF#refs/heads/} = "main" ]
           then
+            echo "branch main"
             cml comment create --target=commit/$GITHUB_SHA report.md
           else
+            echo "pull request"
             cml comment create --update report.md
           fi

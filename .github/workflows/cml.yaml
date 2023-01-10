@@ -25,7 +25,7 @@ on:
       metrics:
         required: false
         type: string
-        default: ${{ inputs.metrics }}
+        default: metrics/metrics.json
       plots:
         required: false
         type: string
@@ -37,7 +37,11 @@ on:
       metric_name:
         required: False
         type: string
-        default: ${{ inputs.metric_name }}
+        default: Pcc
+      graph:
+        required: False
+        type: string
+        default: empty
 
 jobs:
   run:
@@ -226,6 +230,19 @@ jobs:
           echo >> report.md
           dvc metrics diff $branch --targets ${{ inputs.cost }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           cat /tmp/metrics_diff_result.md >> report.md
+
+
+      - name: cml_run_graph
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ inputs.graph != 'empty' }}
+        run: |
+          dvc pull ${{ inputs.graph }}
+          echo >> report.md
+          <span style="color:green">*Local link (versions)*</span>
+          <span style="color:red">*Prod link (execVersions)*</span>
+          cml asset publish --md ${{ inputs.graph }} >> report.md
+          echo >> report.md
 
 
       - name: cml_run_dag_and_export

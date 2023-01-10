@@ -239,8 +239,6 @@ jobs:
         run: |
           dvc pull ${{ inputs.graph }}
           echo >> report.md
-          echo "<span style="color:green">*Local link (versions)*</span>" >> report.md
-          echo "<span style="color:red">*Prod link (execVersions)*</span>" >> report.md
           cml asset publish --md ${{ inputs.graph }} >> report.md
           echo >> report.md
 

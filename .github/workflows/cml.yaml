@@ -25,7 +25,7 @@ on:
       metrics:
         required: false
         type: string
-        default: metrics/metrics.json
+        default: ${{ inputs.metrics }}
       plots:
         required: false
         type: string
@@ -34,6 +34,10 @@ on:
         required: False
         type: string
         default: empty
+      metric_name:
+        required: False
+        type: string
+        default: ${{ inputs.metric_name }}
 
 jobs:
   run:
@@ -81,17 +85,17 @@ jobs:
 
           if [ -e is_better.py ]
           then
-            if dvc metrics diff $branch --targets metrics/metrics.json --show-md --no-path --all;
+            if dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all;
             then
               pip install scipy
               dvc pull ${{ inputs.test_targets }}
               dvc pull ${{ inputs.metrics }}
-              old=$(dvc metrics diff $branch --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" |  tr -d " \t\n\r" | cut -d '|' -f 3)
-              new=$(dvc metrics diff $branch --targets metrics/metrics.json --show-md --no-path --all | grep "Pcc.average" |  tr -d " \t\n\r" | cut -d '|' -f 4)
+              old=$(dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all | grep "${{ inputs.metric_name }}.average" |  tr -d " \t\n\r" | cut -d '|' -f 3)
+              new=$(dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all | grep "${{ inputs.metric_name }}.average" |  tr -d " \t\n\r" | cut -d '|' -f 4)
               n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
               python3 is_better.py $old $new $n_test
               echo "Comparison branch $branch"
-              echo "Probability to get an equal or larger PCC difference if scores follows a normal law (random performance):" >> report.md
+              echo "Probability to get an equal or larger ${{ inputs.metric_name }} difference if scores follows a normal law (random performance):" >> report.md
               cat /tmp/proba.txt >> report.md
             fi
           fi
@@ -112,7 +116,7 @@ jobs:
           dvc pull ${{ inputs.metrics }}
           dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           head -n 2 /tmp/metrics_diff_result.md >> report.md
-          grep "Pcc" /tmp/metrics_diff_result.md >> report.md
+          grep "${{ inputs.metric_name }}" /tmp/metrics_diff_result.md >> report.md
 
       - name: cml_run_plots
         env:

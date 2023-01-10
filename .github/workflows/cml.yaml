@@ -120,7 +120,7 @@ jobs:
           dvc pull ${{ inputs.metrics }}
           dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
           head -n 2 /tmp/metrics_diff_result.md >> report.md
-          grep "${{ inputs.metric_name }}" /tmp/metrics_diff_result.md >> report.md
+          grep ${{ inputs.metric_name }} /tmp/metrics_diff_result.md >> report.md
 
       - name: cml_run_plots
         env:

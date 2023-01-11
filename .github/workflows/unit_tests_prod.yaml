@@ -7,6 +7,11 @@ on:
         required: false
         type: string
         default: 'true'
+      executor:
+        description: "Execute unit tests with pytest or python"
+        type: string
+        default: pytest -v
+
     secrets:
         AWS_ACCESS_KEY_ID:
           required: true
@@ -79,5 +84,5 @@ jobs:
       - name: unit test
         run: |
           source ./.venv/bin/activate
-          echo "pytest"
-          pytest -v unit_tests/test_prod.py
+          echo ${{ inputs.executor }}
+          ${{ inputs.executor }} unit_tests/test_prod.py

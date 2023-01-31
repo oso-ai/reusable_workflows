@@ -40,10 +40,10 @@ jobs:
       docker_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
@@ -99,7 +99,7 @@ jobs:
           if_false: '{}'
 
       - name: Build, tag, and push image to Amazon ECR
-        uses: whoan/docker-build-with-cache-action@v5
+        uses: whoan/docker-build-with-cache-action@v6
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ${{ steps.compute_image_name.outputs.image_name }}

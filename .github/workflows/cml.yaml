@@ -206,7 +206,12 @@ jobs:
         if: ${{ inputs.test_targets != 'empty' }}
         run: |
 
-          dvc pull ${{ inputs.test_targets }}
+          if [ -f ${{ inputs.test_targets }} ]
+          then
+          echo "Git tracked file"
+          else
+            dvc pull ${{ inputs.test_targets }}
+          fi
 
           n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
           echo "**Test** : $n_test\n" >> report.md

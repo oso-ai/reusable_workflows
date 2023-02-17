@@ -205,6 +205,12 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ inputs.test_targets != 'empty' }}
         run: |
+          if [ ${{ inputs.training_targets }} = 'empty' ]
+          then
+            # Add informations about data in report
+            echo "## Données\n" >> report.md
+            echo "Sur cette branche :\n" >> report.md
+          fi
 
           if [ -f ${{ inputs.test_targets }} ]
           then

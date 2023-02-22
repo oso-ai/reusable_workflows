@@ -8,9 +8,6 @@ on:
         required: false
         type: string
         default: 'true'
-      detector_name:
-        required: true
-        type: string
       region:
         required: false
         type: string
@@ -86,7 +83,7 @@ jobs:
         id: compute_image_name
         shell: bash
         run: |
-          echo "image_name=lambda-${{ inputs.detector_name }}" >> $GITHUB_OUTPUT
+          echo "image_name=lambda-/${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
 
       - name: Determine path for github requirements
         uses: haya14busa/action-cond@v1

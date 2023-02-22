@@ -7,9 +7,6 @@ on:
       AWS_SECRET_ACCESS_KEY_CML:
         required: true
     inputs:
-      detector_name:
-        required: false
-        type: string
       training_targets:
         required: false
         type: string
@@ -62,7 +59,7 @@ jobs:
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global --add safe.directory /__w/${{ inputs.detector_name }}/${{ inputs.detector_name }}
+          git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
           git fetch --prune
 
           # install dvc[s3]

@@ -83,7 +83,7 @@ jobs:
         id: compute_image_name
         shell: bash
         run: |
-          echo "image_name=lambda-/${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
+          echo "image_name=lambda-${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
 
       - name: Determine path for github requirements
         uses: haya14busa/action-cond@v1

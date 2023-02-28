@@ -135,46 +135,55 @@ jobs:
           fi
 
           # Add confusion matrices to the report
-          echo "## Matrices de confusion" >> report.md
-          for file in ${{ inputs.plots }}/confusion_*.csv
-          do
-            echo $file
-            file_basename=$(basename -- $file)
-            filename=${file_basename%.*}
-            echo "### $filename" | sed 's/confusion_//' >> report.md
-            vega_path="/tmp/${filename}.json"
-            echo $vega_path
-            if dvc plots diff --targets $file --template confusion -x truth -y predicted --show-vega $branch > $vega_path; then
-                echo "The difference between confusion matrix of current branch and $branch branch has been created successfully"
-            else
-                echo "The corresponding confusion matrix seems to be unavailable on branch $branch, only the confusion matrix of the current branch will be displayed"
-                dvc plots show $file --template confusion -x truth -y predicted --show-vega > $vega_path
+          if [ -d ${{ inputs.plots }} ];
+          then
+            if [ ls ${{ inputs.plots }}/confusion_*.csv ];
+              then
+              echo "## Matrices de confusion" >> report.md
+              for file in ${{ inputs.plots }}/confusion_*.csv
+              do
+                echo $file
+                file_basename=$(basename -- $file)
+                filename=${file_basename%.*}
+                echo "### $filename" | sed 's/confusion_//' >> report.md
+                vega_path="/tmp/${filename}.json"
+                echo $vega_path
+                if dvc plots diff --targets $file --template confusion -x truth -y predicted --show-vega $branch > $vega_path; then
+                    echo "The difference between confusion matrix of current branch and $branch branch has been created successfully"
+                else
+                    echo "The corresponding confusion matrix seems to be unavailable on branch $branch, only the confusion matrix of the current branch will be displayed"
+                    dvc plots show $file --template confusion -x truth -y predicted --show-vega > $vega_path
+                fi
+                vl2png $vega_path -s 1.0 > plot.png
+                cml asset publish --md plot.png >> report.md
+              done
             fi
-            vl2png $vega_path -s 1.0 > plot.png
-            cml asset publish --md plot.png >> report.md
-          done
 
 
-          # # Publish Roc 
-          for file in ${{ inputs.plots }}/ROC_*.json
-          do
-            echo $file
-            file_basename=$(basename -- $file)
-            filename=${file_basename%.*}
-            vega_path="/tmp/${filename}.json"
-            echo $vega_path
-            echo "### $filename" | sed 's/ROC_//' >> report.md        
-            if dvc plots diff --targets $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega $branch > $vega_path; then
-              echo "The difference between ROC curve of current branch and $branch branch has been created successfully"
-            else
-              echo "The corresponding ROC curve seems to be unavailable on branch $branch, only the ROC curve of the current branch will be displayed"
-              dvc plots show $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega > $vega_path
-              echo "Done"
+            # # Publish Roc
+            if [ ls ${{ inputs.plots }}/ROC_*.json ];
+              then
+              echo "## Courbes ROC" >> report.md
+              for file in ${{ inputs.plots }}/ROC_*.json
+              do
+                echo $file
+                file_basename=$(basename -- $file)
+                filename=${file_basename%.*}
+                vega_path="/tmp/${filename}.json"
+                echo $vega_path
+                echo "### $filename" | sed 's/ROC_//' >> report.md        
+                if dvc plots diff --targets $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega $branch > $vega_path; then
+                  echo "The difference between ROC curve of current branch and $branch branch has been created successfully"
+                else
+                  echo "The corresponding ROC curve seems to be unavailable on branch $branch, only the ROC curve of the current branch will be displayed"
+                  dvc plots show $file -x Fpr --x-label "False positive rate"  -y Tpr --y-label "True positive rate" --show-vega > $vega_path
+                  echo "Done"
+                fi
+                vl2png $vega_path -s 1.0 > plot.png
+                cml asset publish --md plot.png >> report.md
+              done
             fi
-            vl2png $vega_path -s 1.0 > plot.png
-            cml asset publish --md plot.png >> report.md
-          done
-
+          fi
 
       - name: cml_run_training_targets
         env:

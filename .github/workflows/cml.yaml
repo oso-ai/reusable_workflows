@@ -137,7 +137,7 @@ jobs:
           # Add confusion matrices to the report
           if [ -d ${{ inputs.plots }} ];
           then
-            if [ ls ${{ inputs.plots }}/confusion_*.csv ];
+            if ls ${{ inputs.plots }}/confusion_*.csv > /dev/null;
               then
               echo "## Matrices de confusion" >> report.md
               for file in ${{ inputs.plots }}/confusion_*.csv
@@ -161,7 +161,7 @@ jobs:
 
 
             # # Publish Roc
-            if [ ls ${{ inputs.plots }}/ROC_*.json ];
+            if ls ${{ inputs.plots }}/ROC_*.json > /dev/null;
               then
               echo "## Courbes ROC" >> report.md
               for file in ${{ inputs.plots }}/ROC_*.json

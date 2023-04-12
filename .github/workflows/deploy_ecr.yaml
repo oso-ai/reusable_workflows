@@ -40,15 +40,15 @@ jobs:
       docker_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.5.0
+        uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v4.3.0
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -71,7 +71,7 @@ jobs:
           fi
         
       - name: Get current date
-        uses: 1466587594/get-current-time@v2.0.2
+        uses: 1466587594/get-current-time@v2
         id: current-time
         with:
           format: DD-MM-YYYY
@@ -99,7 +99,7 @@ jobs:
           if_false: '{}'
 
       - name: Build, tag, and push image to Amazon ECR
-        uses: whoan/docker-build-with-cache-action@v5
+        uses: whoan/docker-build-with-cache-action@v6
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ${{ steps.compute_image_name.outputs.image_name }}

@@ -46,8 +46,8 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     outputs:
-      repo_name: ${{ steps.vars2.outputs.image_name }}
-      docker_tag: ${{ steps.vars.outputs.image_tag }}
+      repo_name: ${{ steps.compute_image_name.outputs.image_name }}
+      docker_tag: ${{ steps.compute_image_tag.outputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3

@@ -14,7 +14,8 @@ on:
 jobs:
 
   tag_commit:    
-
+    name: Tag commit
+    
     runs-on: ubuntu-latest    
     
     steps:

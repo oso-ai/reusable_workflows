@@ -25,6 +25,11 @@ on:
         required: false
         type: string
         default: ./Dockerfile
+      slack_text:
+        description: "A text added to slack message"
+        required: false
+        type: string
+        default: ''
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -121,6 +126,7 @@ jobs:
       - name: Send message to Slack
         uses: 8398a7/action-slack@v3
         with:
+          text: ${{ inputs.slack_text }}
           status: ${{ job.status }}
           author_name: ${{ steps.vars.outputs.branch_name }}
           fields: repo,message,author,took,commit

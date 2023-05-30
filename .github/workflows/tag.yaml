@@ -8,7 +8,11 @@ on:
         type: string
       commit_sha:
         required: true
-        type: string      
+        type: string
+      ref:
+        required: false
+        type: string
+        default: 'build'
 
 
 jobs:
@@ -23,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: 'build'
+          ref: ${{ inputs.ref }}
           fetch-depth: '0'
 
       - name: Print commit sha

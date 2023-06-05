@@ -74,6 +74,7 @@ jobs:
         if: ${{ inputs.dvc_pull == 'true' }}
         run: |
           pip install dvc['s3']
+          dvc repro --allow-missing -q
           dvc pull -q
           dvc status -q
 

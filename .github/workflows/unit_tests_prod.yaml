@@ -91,7 +91,7 @@ jobs:
               dvc pull -q ${{ inputs.files_to_pull }}
           fi
 
-      - name: unit test
+      - name: Unit test
         run: |
           source ./.venv/bin/activate
           echo ${{ inputs.executor }}

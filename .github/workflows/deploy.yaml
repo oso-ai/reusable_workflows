@@ -3,15 +3,11 @@ name: Build docker image and deploy to Amazon ECR
 on:
   workflow_call:
     inputs:
-      dvc_pull:
-        description: "Run dvc install, pull and repro if true, else ignore this step"
-        required: false
+      files_to_pull:
+        description: "Files to pull to build docker image, separated by space"
         type: string
-        default: 'true'
-      detector_name:
+        default: 'null'
         required: false
-        type: string
-        default: test
       region:
         required: false
         type: string
@@ -58,6 +54,12 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Dvc pull
+        if: ${{ inputs.files_to_pull != 'null' }}
+        run: |
+          pip install dvc['s3']
+          dvc pull -q ${{ inputs.files_to_pull }}
         
       - name: Get current date
         uses: 1466587594/get-current-time@v2

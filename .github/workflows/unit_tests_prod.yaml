@@ -61,12 +61,12 @@ jobs:
             bash install_requirements.sh prod
           elif [ -f requirements_prod.txt ]; then
             echo "Standard requirements system"
-            pip install -r requirements_prod.txt
+            pip install -q -r requirements_prod.txt
           else
             echo "Neither requirements_prod.txt, neither install_requirements.sh, exiting"
             exit 1
           fi
-          pip install pytest
+          pip install -q pytest
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -78,9 +78,9 @@ jobs:
       - name: Dvc status
         if: ${{ inputs.dvc_check == 'true' }}
         run: |
-          pip install dvc['s3']
+          pip install -q dvc['s3']
           dvc repro --allow-missing -q
-          pip install dvc['s3']==2.57
+          pip install -q dvc['s3']==2.57
           if dvc data status --not-in-remote | grep "Not in remote"
           then
               exit 1
@@ -92,7 +92,7 @@ jobs:
           then
               echo "no pull needed"
           else
-              pip install dvc['s3']
+              pip install -q dvc['s3']
               dvc pull -q ${{ inputs.files_to_pull }}
           fi
 

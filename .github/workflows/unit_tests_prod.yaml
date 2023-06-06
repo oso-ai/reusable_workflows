@@ -76,7 +76,7 @@ jobs:
           aws-region: eu-west-3
 
       - name: Dvc status / pull
-        if: ${{ inputs.dvc_pull == 'true' }}
+        if: ${{ inputs.dvc_check == 'true' }}
         run: |
           pip install dvc['s3']
           dvc repro --allow-missing -q

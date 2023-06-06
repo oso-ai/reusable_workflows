@@ -11,8 +11,8 @@ on:
         description: "Execute unit tests with pytest or python"
         type: string
         default: pytest -v
-      files_to_pull: "Files to pull to execute unit test, separated by space"
-        description: 
+      files_to_pull:
+        description: "Files to pull to execute unit test, separated by space"
         type: string
         default: 'null'
         required: false

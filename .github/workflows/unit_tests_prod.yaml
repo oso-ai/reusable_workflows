@@ -75,7 +75,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-3
 
-      - name: Dvc status / pull
+      - name: Dvc status
         if: ${{ inputs.dvc_check == 'true' }}
         run: |
           pip install dvc['s3']
@@ -86,13 +86,13 @@ jobs:
               exit 1
           fi
 
+      - name: Dvc pull / Unit test
+        run: |
           if [ ${{ inputs.files_to_pull }} != 'null' ]
           then
               dvc pull -q ${{ inputs.files_to_pull }}
           fi
 
-      - name: Unit test
-        run: |
           source ./.venv/bin/activate
           echo ${{ inputs.executor }}
           ${{ inputs.executor }} unit_tests/test_prod.py

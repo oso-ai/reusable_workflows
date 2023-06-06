@@ -92,7 +92,8 @@ jobs:
           then
               echo "no pull needed"
           else
-              pip install -q dvc['s3']
+              pip install -U -q dvc['s3']
+              echo "pull files or stages selectively"
               dvc pull -q ${{ inputs.files_to_pull }}
           fi
 

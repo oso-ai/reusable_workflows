@@ -90,6 +90,7 @@ jobs:
         run: |
           if [ ${{ inputs.files_to_pull }} != 'null' ]
           then
+              pip install dvc['s3']
               dvc pull -q ${{ inputs.files_to_pull }}
           fi
 

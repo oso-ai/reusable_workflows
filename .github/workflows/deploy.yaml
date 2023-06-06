@@ -58,18 +58,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      
-        
-      - name: Dvc install pull repro
-        if: ${{ inputs.dvc_pull == 'true' }}
-        run: |
-          pip install dvc['s3']
-          dvc pull
-          if dvc repro --dry | grep 'Running stage'
-          then
-              echo "dvc is not up to date !"
-              exit 1
-          fi
         
       - name: Get current date
         uses: 1466587594/get-current-time@v2

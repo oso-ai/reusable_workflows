@@ -2,8 +2,8 @@ name: unit_tests_prod
 on:
   workflow_call:
     inputs:
-      dvc_pull:
-        description: "Run dvc pull if true, else ignore this step"
+      dvc_check:
+        description: "Run dvc status if true, else ignore this step"
         required: false
         type: string
         default: 'true'
@@ -11,6 +11,11 @@ on:
         description: "Execute unit tests with pytest or python"
         type: string
         default: pytest -v
+      files_to_pull: "Files to pull to execute unit test, separated by space"
+        description: 
+        type: string
+        default: 'null'
+        required: false
 
     secrets:
         AWS_ACCESS_KEY_ID:
@@ -70,13 +75,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-3
 
-      - name: Dvc pull
+      - name: Dvc status
         if: ${{ inputs.dvc_pull == 'true' }}
         run: |
           pip install dvc['s3']
           dvc repro --allow-missing -q
-          dvc pull -q
-          dvc status -q
+          pip install dvc['s3']==2.57
+          if dvc data status --not-in-remote | grep "Not in remote"
+          then
+              exit 1
+          fi
+
+      - name: Dvc pull
+        if: ${{ inputs.files_to_pull != 'null' }}
+        run: |
+          dvc pull -q ${{ inputs.files_to_pull }}
 
       - name: unit test
         run: |

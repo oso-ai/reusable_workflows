@@ -88,7 +88,7 @@ jobs:
 
       - name: Dvc pull / Unit test
         run: |
-          if [ ${{ inputs.files_to_pull }} = 'null' ]
+          if [ "${{ inputs.files_to_pull }}" = 'null' ]
           then
               echo "no pull needed"
           else

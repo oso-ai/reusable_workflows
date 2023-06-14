@@ -86,13 +86,13 @@ jobs:
 
           if [ -e is_better.py ]
           then
-            if dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all;
+            if dvc metrics diff $branch --targets ${{ inputs.metrics }} --md --no-path --all;
             then
               pip install scipy
               dvc pull ${{ inputs.test_targets }}
               dvc pull ${{ inputs.metrics }}
-              old=$(dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all | grep "${{ inputs.metric_name }}.average" |  tr -d " \t\n\r" | cut -d '|' -f 3)
-              new=$(dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all | grep "${{ inputs.metric_name }}.average" |  tr -d " \t\n\r" | cut -d '|' -f 4)
+              old=$(dvc metrics diff $branch --targets ${{ inputs.metrics }} --md --no-path --all | grep "${{ inputs.metric_name }}.average" |  tr -d " \t\n\r" | cut -d '|' -f 3)
+              new=$(dvc metrics diff $branch --targets ${{ inputs.metrics }} --md --no-path --all | grep "${{ inputs.metric_name }}.average" |  tr -d " \t\n\r" | cut -d '|' -f 4)
               n_test=$(tail ${{ inputs.test_targets }} -n +2 | wc -l)
               python3 is_better.py $old $new $n_test
               echo "Comparison branch $branch"
@@ -115,7 +115,7 @@ jobs:
           echo >> report.md
           echo >> report.md
           dvc pull ${{ inputs.metrics }}
-          dvc metrics diff $branch --targets ${{ inputs.metrics }} --show-md --no-path --all > /tmp/metrics_diff_result.md
+          dvc metrics diff $branch --targets ${{ inputs.metrics }} --md --no-path --all > /tmp/metrics_diff_result.md
           head -n 2 /tmp/metrics_diff_result.md >> report.md
           grep ${{ inputs.metric_name }} /tmp/metrics_diff_result.md >> report.md
 
@@ -245,7 +245,7 @@ jobs:
           dvc pull ${{ inputs.cost }}
           # Add stats on prod cost
           echo >> report.md
-          dvc metrics diff $branch --targets ${{ inputs.cost }} --show-md --no-path --all > /tmp/metrics_diff_result.md
+          dvc metrics diff $branch --targets ${{ inputs.cost }} --md --no-path --all > /tmp/metrics_diff_result.md
           cat /tmp/metrics_diff_result.md >> report.md
 
 

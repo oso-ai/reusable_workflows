@@ -78,9 +78,8 @@ jobs:
       - name: Dvc status
         if: ${{ inputs.dvc_check == 'true' }}
         run: |
-          pip install -q dvc['s3']
+          pip install -q dvc['s3']==3.0.0
           dvc repro --allow-missing -q
-          pip install -q dvc['s3']==2.57
           if dvc data status --not-in-remote | grep "Not in remote"
           then
               exit 1
@@ -92,7 +91,7 @@ jobs:
           then
               echo "no pull needed"
           else
-              pip install -U -q dvc['s3']
+              pip install -U -q dvc['s3']==3.0.0
               echo "pull files or stages selectively"
               dvc pull -q ${{ inputs.files_to_pull }}
           fi

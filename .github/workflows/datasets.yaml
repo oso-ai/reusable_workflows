@@ -1,6 +1,17 @@
 name: Update datasets table on LabelsDB
 on:
   workflow_call:
+    inputs:
+      train_path:
+        required: true 
+        type: string
+      test_path:
+        required: true 
+        type: str
+      detector:
+        required: true 
+        type: str
+
     secrets:
       OSO_UTILS_ACCESS_TOKEN:
         required: true
@@ -35,7 +46,7 @@ jobs:
         run: |
           source ./.venv/bin/activate
           echo "Updating datasets table in LabelsDB"
-          pushDatasetsToLabelsDB .
+          pushDatasetsToLabelsDB ${{ inputs.train_path }} ${{ inputs.test_path }} ${{ inputs.detector }}
 
       - name: Determine text for slack message
         uses: haya14busa/action-cond@v1

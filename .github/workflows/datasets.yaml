@@ -55,6 +55,7 @@ jobs:
           cond: ${{ job.status == 'success' }}
           if_true: "Dataset update, LabelsDB updated successfully"
           if_false: "Dataset update, an error occurred on GitHub while updating LabelsDB"
+        if: always()
 
       - name: Send message to Slack
         id: slack

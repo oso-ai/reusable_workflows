@@ -50,6 +50,7 @@ jobs:
           cond: ${{ job.status == 'success' }}
           if_true: "Particles file(s) modified, associated particles are kept on S3"
           if_false: "Particles file(s) modified, but an error occurred on GitHub while trying to keep particles"
+        if: always()
 
       - name: Send message to Slack
         id: slack

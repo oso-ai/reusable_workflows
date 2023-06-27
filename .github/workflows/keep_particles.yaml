@@ -1,0 +1,65 @@
+name: Keep particles on S3
+
+on:
+  workflow_call:
+    inputs:
+      paths:
+        required: true
+        type: string
+
+    secrets:
+      OSO_UTILS_ACCESS_TOKEN:
+        required: true
+      LABELSDB_MONITORING_SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  keep_particles:
+    name: keep particles on S3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.5.0
+
+      - name: Setup python
+        uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.8
+
+      - name: Add token for oso_utils
+        env:
+          OSO_UTILS_ACCESS_TOKEN: ${{ secrets.OSO_UTILS_ACCESS_TOKEN }}
+        run: git config --global url."https://${{ secrets.OSO_UTILS_ACCESS_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+
+      - name: install requirements
+        id: install-requirements
+        run: |
+          python -m venv ./.venv && source ./.venv/bin/activate
+          pip install git+ssh://git@github.com/oso-ai/oso-utils.git@main#subdirectory=genericUtils
+
+      - name: Call keepParticles endpoint on labelsDB API
+        run: |
+          source ./.venv/bin/activate
+          echo "Calling keepParticles endpoint on labelsDB API"
+          keep-particles ${{ inputs.paths }}
+
+      - name: Determine text for slack message
+        uses: haya14busa/action-cond@v1
+        id: slack_text
+        with:
+          cond: ${{ job.status == 'success' }}
+          if_true: "Particles file(s) modified, associated particles are kept on S3"
+          if_false: "Particles file(s) modified, but an error occurred on GitHub while trying to keep particles"
+
+      - name: Send message to Slack
+        id: slack
+        uses: 8398a7/action-slack@v3
+        with:
+          text: ${{ steps.slack_text.outputs.value }}
+          status: ${{ job.status }}
+          author_name: ${{ steps.vars.outputs.branch_name }}
+          job_name: 'keep particles on S3'
+          fields: repo,message,author,took,commit,job
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.LABELSDB_MONITORING_SLACK_WEBHOOK_URL }}
+        if: always() # Pick up events even if the job fails or is canceled.

@@ -46,7 +46,7 @@ jobs:
         run: |
           source ./.venv/bin/activate
           echo "Updating datasets table in LabelsDB"
-          pushDatasetsToLabelsDB ${{ inputs.train_path }} ${{ inputs.test_path }} ${{ inputs.detector }}
+          push-datasets ${{ inputs.train_path }} ${{ inputs.test_path }} ${{ inputs.detector }}
 
       - name: Determine text for slack message
         uses: haya14busa/action-cond@v1

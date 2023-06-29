@@ -41,15 +41,15 @@ jobs:
         run: |
           source ./.venv/bin/activate
           echo "Calling keepParticles endpoint on labelsDB API"
-          keep-particles ${{ inputs.paths }}
+          keep-particles ${{ inputs.paths }} --slack-webhook-url ${{ secrets.LABELSDB_MONITORING_SLACK_WEBHOOK_URL }}
 
       - name: Determine text for slack message
         uses: haya14busa/action-cond@v1
         id: slack_text
         with:
           cond: ${{ job.status == 'success' }}
-          if_true: "Particles file(s) modified, associated particles are kept on S3"
-          if_false: "Particles file(s) modified, but an error occurred on GitHub while trying to keep particles"
+          if_true: "Fichier(s) de particules modifié(s), tâche 'keepParticles' démarrée, vous devriez recevoir une notification à la fin de l'exécution."
+          if_false: "Fichier(s) de particules modifié(s), mais une erreur s'est produite en démarrant la tâche 'keepParticles'."
         if: always()
 
       - name: Send message to Slack

@@ -60,18 +60,12 @@ jobs:
         run: |
           pip install dvc['s3']
           dvc pull -q ${{ inputs.files_to_pull }}
-        
-      - name: Get current date
-        uses: 1466587594/get-current-time@v2
-        id: current-time
-        with:
-          format: DD-MM-YYYY
 
       - name: Compute image tag
         id: compute_image_tag
         shell: bash
         run: |
-          echo "image_tag=${{ steps.current-time.outputs.formattedTime }}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "image_tag=$(git log -1 --format=%cd --date=format:%d-%m-%Y)-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Compute image name
         id: compute_image_name

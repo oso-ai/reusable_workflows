@@ -2,15 +2,26 @@ name: Update datasets table on LabelsDB
 on:
   workflow_call:
     inputs:
-      train_path:
-        required: true 
-        type: string
-      test_path:
-        required: true 
-        type: string
       detector:
-        required: true 
+        required: true
         type: string
+      train:
+        required: false
+        type: string
+        default: ''
+      validation:
+        required: false
+        type: string
+        default: ''
+      test:
+        required: false
+        type: string
+        default: ''
+      train_val:
+        required: false
+        type: string
+        default: ''
+
 
     secrets:
       OSO_UTILS_ACCESS_TOKEN:
@@ -41,12 +52,44 @@ jobs:
         run: |
           python -m venv ./.venv && source ./.venv/bin/activate
           pip install git+ssh://git@github.com/oso-ai/oso-utils.git@main#subdirectory=genericUtils
+          
+      - name: Determine train argument
+        uses: haya14busa/action-cond@v1
+        id: train_arg
+        with:
+          cond: ${{ inputs.train != '' }}
+          if_true: '--train ${{ inputs.train }}'
+          if_false: ''
+
+      - name: Determine validation argument
+        uses: haya14busa/action-cond@v1
+        id: validation_arg
+        with:
+          cond: ${{ inputs.validation != '' }}
+          if_true: '--validation ${{ inputs.validation }}'
+          if_false: ''
+
+      - name: Determine test argument
+        uses: haya14busa/action-cond@v1
+        id: test_arg
+        with:
+          cond: ${{ inputs.test != '' }}
+          if_true: '--test ${{ inputs.test }}'
+          if_false: ''
+
+      - name: Determine train_val argument
+        uses: haya14busa/action-cond@v1
+        id: train_val_arg
+        with:
+          cond: ${{ inputs.train_val != '' }}
+          if_true: '--train_val ${{ inputs.train_val }}'
+          if_false: ''
 
       - name: Update datasets table in LabelsDB
         run: |
           source ./.venv/bin/activate
           echo "Updating datasets table in LabelsDB"
-          push-datasets ${{ inputs.train_path }} ${{ inputs.test_path }} ${{ inputs.detector }}
+          push-datasets ${{ inputs.detector }} ${{ steps.train_arg.outputs.value }} ${{ steps.validation_arg.outputs.value }} ${{ steps.test_arg.outputs.value }} ${{ steps.train_val_arg.outputs.value }}
 
       - name: Determine text for slack message
         uses: haya14busa/action-cond@v1

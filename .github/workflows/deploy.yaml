@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: eu-west-3
+      python_version:
+        required: false
+        type: string
+        default: 3.8
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -42,7 +46,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ inputs.python_version }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2

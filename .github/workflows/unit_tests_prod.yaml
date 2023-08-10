@@ -16,6 +16,10 @@ on:
         type: string
         default: 'null'
         required: false
+      python_version:
+        required: false
+        type: string
+        default: 3.8
 
     secrets:
         AWS_ACCESS_KEY_ID:
@@ -37,7 +41,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8 #install the python needed
+          python-version: ${{ inputs.python_version }}
 
       - name: fetch
         run: |

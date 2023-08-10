@@ -21,6 +21,10 @@ on:
         required: false
         type: string
         default: ''
+      python_version:
+        required: false
+        type: string
+        default: 3.8
 
 
     secrets:
@@ -40,7 +44,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v4.3.0
         with:
-          python-version: 3.8
+          python-version: ${{ inputs.python_version }}
 
       - name: Add token for oso_utils
         env:

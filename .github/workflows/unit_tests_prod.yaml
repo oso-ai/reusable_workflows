@@ -59,6 +59,10 @@ jobs:
       - name: install requirements
         id: install-requirements
         run: |
+          if cat requirements.txt dependencies/dependencies.txt | grep pygraphviz;
+          then
+            sudo apt-get install python3-dev graphviz libgraphviz-dev pkg-config
+          fi
           python -m venv ./.venv && source ./.venv/bin/activate
           if [ -f install_requirements.sh ]; then
             echo "new requirements system"

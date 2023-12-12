@@ -1,0 +1,126 @@
+name: Build docker image and deploy to Google GCR
+
+on:
+  workflow_call:
+    inputs:
+      repository_domain:
+        description: "Repository domain"
+        required: false
+        type: string
+        default: "europe-west9-docker.pkg.dev"
+      repository_project:
+        description: "Project in which the repository was created"
+        required: false
+        type: string
+        default: "oso-shared-vpc-staging-95e7"
+      repository_name:
+        description: "Repository name"
+        required: true
+        type: string
+      image_name:
+        description: "Image name"
+        required: true
+        type: string
+      image_tags:
+        description: "Image tags"
+        required: false
+        default: ""
+        type: string
+      dockerfile_path:
+        description: "Path to a Dockerfile, default value is ."
+        required: false
+        type: string
+        default: .
+      docker_build_args:
+        description: 'Additional docker build arguments'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    env:
+      WORKLOAD_IDENTITY_PROVIDER_LOCATION: "projects/940002999212/locations/global/workloadIdentityPools/github-actions-ident-pool/providers/github-actions-ident-provider"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Google auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER_LOCATION }}
+          service_account: github-actions@${{ inputs.repository_project }}.iam.gserviceaccount.com
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Setup docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate docker
+        run: |
+          gcloud auth configure-docker --quiet europe-west9-docker.pkg.dev
+
+      - name: Build image tags
+        id: build_tags
+        run: |
+          DOCKER_IMAGE=${{ inputs.image_name }}
+          REPOSITORY_DOMAIN=${{ inputs.repository_domain }}/${{ inputs.repository_project }}/${{ inputs.image_name }}
+          VERSION=main
+          SHA=$(echo "${GITHUB_SHA::7}")
+          CUSTOM_TAGS=${{ inputs.image_tags }}
+          TAGS=""
+      
+          if [[ -n "$CUSTOM_TAGS" ]]; then
+            IFS=',' read -ra TAG_ARRAY <<< "$CUSTOM_TAGS"
+            for tag in "${TAG_ARRAY[@]}"; do
+              TAGS="${TAGS}${TAGS:+,}${REPOSITORY_DOMAIN}/${DOCKER_IMAGE}:${tag}"
+            done
+          else
+            if [[ $GITHUB_REF == refs/tags/* ]]; then
+              VERSION=${GITHUB_REF#refs/tags/}
+              TAGS="${REPOSITORY_DOMAIN}/${DOCKER_IMAGE}:${VERSION}"
+            elif [[ $GITHUB_REF == refs/heads/* ]]; then
+              VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+              TAGS="${REPOSITORY_DOMAIN}/${DOCKER_IMAGE}:${VERSION}"
+            elif [[ $GITHUB_REF == refs/pull/* ]]; then
+              VERSION=pr-${{ github.event.number }}
+              SHA=$(git rev-parse --short "${{ github.event.pull_request.head.sha }}" || echo "${GITHUB_SHA::7}")
+              TAGS="${REPOSITORY_DOMAIN}/${DOCKER_IMAGE}:${VERSION}"
+            fi
+      
+            if [ "${{ github.event_name }}" = "push" ]; then
+              TAGS="${TAGS},${REPOSITORY_DOMAIN}/${DOCKER_IMAGE}:sha-${SHA}"
+            fi
+      
+            # Always include the 'latest' tag for the main branch
+            if [ "$VERSION" = "main" ]; then
+              TAGS="${TAGS},${REPOSITORY_DOMAIN}/${DOCKER_IMAGE}:latest"
+            fi
+          fi
+   
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "sha=${SHA}" >> $GITHUB_OUTPUT
+          echo "created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_OUTPUT: ${{ steps.build_tags.outputs.path }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: "{{defaultContext}}:${{ inputs.dockerfile_path }}"
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.build_tags.outputs.tags }}
+          build-args: |
+            VERSION_SUFFIX=${{ steps.build_tags.outputs.sha }} 
+            ${{ inputs.docker_build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

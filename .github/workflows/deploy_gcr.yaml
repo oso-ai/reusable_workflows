@@ -36,7 +36,11 @@ on:
         required: false
         type: string
         default: ''
-
+    outputs:
+      repo_name:
+        value: ${{ jobs.deploy.outputs.repo_name }}
+      docker_tag:
+        value: ${{ jobs.deploy.outputs.docker_tag }}
 jobs:
   deploy:
     name: Deploy
@@ -46,6 +50,9 @@ jobs:
       id-token: 'write'
     env:
       WORKLOAD_IDENTITY_PROVIDER_LOCATION: "projects/940002999212/locations/global/workloadIdentityPools/github-actions-ident-pool/providers/github-actions-ident-provider"
+    outputs:
+      repo_name: ${{ inputs.repository_domain }}/${{ inputs.repository_project }}/${{ inputs.image_name }}
+      docker_tag: ${{ steps.build_tags.outputs.only_tags }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -107,6 +114,8 @@ jobs:
    
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          ONLY_TAGS=$(echo "$TAGS" | sed 's/[^,]*://g')
+          echo "only_tags=${ONLY_TAGS}" >> $GITHUB_OUTPUT
           echo "sha=${SHA}" >> $GITHUB_OUTPUT
           echo "created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
         env:

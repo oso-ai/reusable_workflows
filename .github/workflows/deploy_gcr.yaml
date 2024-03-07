@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: "oso-shared-vpc-staging-95e7"
+      workload_identity_provider_location:
+        description: "Workload identity provider location"
+        required: false
+        type: string
+        default: "projects/940002999212/locations/global/workloadIdentityPools/github-actions-ident-pool/providers/github-actions-ident-provider"
       repository_name:
         description: "Repository name"
         required: true
@@ -49,7 +54,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     env:
-      WORKLOAD_IDENTITY_PROVIDER_LOCATION: "projects/940002999212/locations/global/workloadIdentityPools/github-actions-ident-pool/providers/github-actions-ident-provider"
+      WORKLOAD_IDENTITY_PROVIDER_LOCATION: ${{ inputs.workload_identity_provider_location }}
     outputs:
       repo_name: ${{ inputs.repository_domain }}/${{ inputs.repository_project }}/${{ inputs.image_name }}
       docker_tag: ${{ steps.build_tags.outputs.only_tags }}
